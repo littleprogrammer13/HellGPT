@@ -2,27 +2,28 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>HellGPT com 30 Fallbacks</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HellGPT — O Vilão Local</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
+      margin: 0;
+      padding: 0;
       background: #110000;
       color: #ff4444;
       font-family: monospace;
-      margin: 0; padding: 0;
       display: flex;
       flex-direction: column;
       height: 100vh;
     }
     header {
       background: #220000;
-      padding: 15px;
+      padding: 20px;
       text-align: center;
       border-bottom: 2px solid #ff0000;
     }
     header h1 {
       margin: 0;
-      font-size: 2em;
+      font-size: 2.2em;
       text-shadow: 0 0 6px #ff0000;
     }
     #chat {
@@ -46,7 +47,6 @@
       display: flex;
       padding: 15px;
       background: #1a0000;
-      align-items: center;
     }
     #user-input {
       flex: 1;
@@ -54,7 +54,6 @@
       border: 1px solid #ff4444;
       background: #0d0d0d;
       color: #fff;
-      font-size: 1em;
     }
     #send {
       padding: 10px 20px;
@@ -64,7 +63,6 @@
       color: #fff;
       cursor: pointer;
       transition: 0.3s;
-      font-weight: bold;
     }
     #send:hover {
       background: #cc0000;
@@ -84,143 +82,60 @@
         transform: rotate(360deg);
       }
     }
-    #fallback-log {
-      font-size: 0.8em;
-      color: #aa2222;
-      margin-top: 10px;
-      padding: 5px 15px;
-      background: #330000;
-      height: 120px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-      border-top: 1px solid #660000;
-      font-family: monospace;
-    }
   </style>
 </head>
 <body>
   <header>
-    <h1>HellGPT — Resistente com 30 fallbacks</h1>
+    <h1>HellGPT — Sombras Digitais</h1>
+    <p>“Eu sou o sussurro nas trevas... acende a chama.”</p>
   </header>
 
   <div id="chat"></div>
 
   <div id="input">
-    <input type="text" id="user-input" placeholder="Fale algo malvado..." />
+    <input type="text" id="user-input" placeholder="Fale, se tiver coragem..." />
     <button id="send">Enviar</button>
     <div id="loader"></div>
   </div>
 
-  <div id="fallback-log" title="Log de tentativa de carregamento das bibliotecas IA"></div>
-
   <script type="module">
-    const fallbackUrls = [
-      'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.2',
-      'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.4.0',
-      'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.0',
-      'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2',
-      'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.14.0',
-      'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.5.3',
-      'https://unpkg.com/@huggingface/transformers@3.5.2',
-      'https://unpkg.com/@huggingface/transformers@3.4.0',
-      'https://unpkg.com/@xenova/transformers@2.17.2',
-      'https://unpkg.com/@xenova/transformers@2.5.3',
-      'https://esm.run/@huggingface/transformers',
-      'https://esm.run/@xenova/transformers',
-      'https://cdn.jsdelivr.net/gh/xenova/transformers.js/dist/transformers.min.js',
-      'https://cdn.jsdelivr.net/gh/huggingface/transformers.js/dist/transformers.min.js',
-      'https://cdn.jsdelivr.net/npm/@huggingface/transformers@2.5.0',
-      'https://cdn.jsdelivr.net/npm/@xenova/transformers@1.3.3',
-      'https://cdn.jsdelivr.net/npm/@huggingface/transformers@2.4.0',
-      'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.10.0',
-      'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.2.0',
-      'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.3.0',
-      'https://unpkg.com/@huggingface/transformers@2.5.0',
-      'https://unpkg.com/@xenova/transformers@1.3.3',
-      'https://unpkg.com/@huggingface/transformers@2.4.0',
-      'https://unpkg.com/@xenova/transformers@2.10.0',
-      'https://unpkg.com/@huggingface/transformers@3.2.0',
-      'https://unpkg.com/@huggingface/transformers@3.3.0',
-      'https://esm.run/@huggingface/transformers@3.5.2',
-      'https://esm.run/@xenova/transformers@2.17.2',
-      'https://esm.run/@huggingface/transformers@3.4.0',
-      'https://esm.run/@xenova/transformers@2.5.3'
-    ];
+    import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js';
 
-    let pipelineFunc = null;
-    const logArea = document.getElementById('fallback-log');
+    let generator = null;
 
-    function log(msg) {
-      console.log(msg);
-      logArea.textContent += msg + '\n';
-      logArea.scrollTop = logArea.scrollHeight;
-    }
-
-    async function loadLibraryWithFallback() {
-      for (const url of fallbackUrls) {
-        log(`Tentando carregar biblioteca de: ${url}`);
-        try {
-          const module = await import(url);
-          if (module.pipeline) {
-            log(`Sucesso ao carregar: ${url}`);
-            if (module.env) {
-              module.env.allowRemoteModels = true;
-              module.env.useBrowserCache = true;
-            }
-            return module.pipeline;
-          } else {
-            log(`Módulo carregado, mas 'pipeline' não encontrado: ${url}`);
-          }
-        } catch (error) {
-          log(`Falha ao carregar de ${url}: ${error.message}`);
-        }
-      }
-      throw new Error('Nenhum fallback funcionou. Abortando.');
-    }
-
-    function addMsg(sender, text, cls = '') {
+    function addMsg(sender, text, cls) {
       const div = document.createElement('div');
       div.className = `msg ${cls}`;
-      div.innerHTML = `<strong>${sender}:</strong> ${text}`;
+      div.innerHTML = `<strong class="sender">${sender}:</strong> ${text}`;
       document.getElementById('chat').appendChild(div);
       document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
     }
 
     async function init() {
-      addMsg('HellGPT', 'Despertando... preparando os feitiços sombrios...');
-      try {
-        pipelineFunc = await loadLibraryWithFallback();
-        addMsg('HellGPT', 'Pronto para semear o caos! Diga algo malvado...');
-      } catch (e) {
-        addMsg('HellGPT', 'Não consegui carregar a magia. Veja o log!', 'ai');
-      }
+      addMsg('HellGPT', 'Despertando... Prepare-se.');
+      generator = await pipeline('text-generation', 'Xenova/gpt2');
+      addMsg('HellGPT', 'Hehehe... estou pronto. Fale já.');
     }
 
     document.getElementById('send').onclick = async () => {
-      const input = document.getElementById('user-input');
-      const text = input.value.trim();
-      if (!text || !pipelineFunc) return;
-
-      addMsg('Você', text, 'user');
-      input.value = '';
+      const inp = document.getElementById('user-input');
+      const msg = inp.value.trim();
+      if (!msg) return;
+      addMsg('Você', msg, 'user');
+      inp.value = '';
       document.getElementById('loader').style.display = 'inline-block';
 
-      const prompt = `HellGPT é um vilão teatral e sarcástico, mas não ofensivo.\nUsuário: ${text}\nHellGPT:`;
+      const prompt = `HellGPT: um vilão teatral e sarcástico, sem ser ofensivo.\nUsuário: ${msg}\nHellGPT:`;
 
       try {
-        const result = await pipelineFunc(prompt, {
-          max_new_tokens: 100,
-          temperature: 0.8,
-          top_p: 0.9,
-        });
-        const generated = result[0]?.generated_text || '';
-        const reply = generated.split('HellGPT:')[1]?.trim() || generated;
+        const outputs = await generator(prompt, { max_new_tokens: 100, temperature: 0.8, top_p: 0.9 });
+        const text = outputs[0]?.generated_text || '';
+        const reply = text.split('HellGPT:')[1]?.trim() || text;
         addMsg('HellGPT', reply, 'ai');
-      } catch (err) {
-        addMsg('HellGPT', 'Algo deu errado na minha maldição...', 'ai');
-        console.error(err);
+      } catch (e) {
+        console.error(e);
+        addMsg('HellGPT', 'Algo falhou. Até eu me envergonho...', 'ai');
       }
-
       document.getElementById('loader').style.display = 'none';
     };
 
